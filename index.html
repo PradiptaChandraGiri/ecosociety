@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economic Evaluation and Optimization of a Smart Campus Infrastructure</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Poppins and Inter from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Load Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Load Chart.js for the new Monitoring Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* Define custom theme colors for easy Tailwind use and consistency */
+        :root {
+            --color-primary: #0B7742; /* Eco Green */
+            --color-secondary: #DFF5E1; /* Light Green */
+            --color-accent: #1B998B; /* Teal */
+            --color-text: #202020;
+            --color-bg: #ffffff;
+            --color-card: #f9fafb;
+        }
+
+        /* Dark Mode variables */
+        .dark {
+            --color-primary: #52B788; /* Lighter Green for contrast */
+            --color-secondary: #0A261A; /* Darker green */
+            --color-accent: #48E1D2; /* Brighter Teal */
+            --color-text: #E5E7EB; /* Light text */
+            --color-bg: #111827; /* Dark background */
+            --color-card: #1f2937;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        /* Set the custom fonts */
+        .font-heading { font-family: 'Poppins', sans-serif; }
+        .font-body { font-family: 'Inter', sans-serif; }
+
+        /* Custom animation for Hero background simulation */
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        #hero {
+            background: linear-gradient(-45deg, var(--color-primary), #38a169, var(--color-accent), #4f46e5);
+            background-size: 400% 400%;
+            animation: flow 15s ease infinite;
+            min-height: 100vh;
+        }
+
+        /* Utility for chart animation */
+        .chart-bar {
+            transition: height 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth Growth */
+            height: 0; /* Initial hidden state */
+        }
+
+        /* Card hover effect for Objectives - Zoom and Glow */
+        .objective-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid transparent;
+            background-color: var(--color-card);
+        }
+        .objective-card:hover {
+            transform: scale(1.05); /* Slight zoom */
+            border-left-color: var(--color-accent);
+            box-shadow: 0 10px 30px rgba(27, 153, 139, 0.5); /* Teal glow effect */
+            background-color: var(--color-secondary);
+        }
+
+        /* Scroll fade-in animation setup */
+        .fade-in-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .fade-in-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Tooltip style for interactive map */
+        .map-icon-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 50;
+        }
+        .map-icon:hover .map-icon-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Custom range slider styling */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--color-primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb {
+            background: var(--color-accent);
+        }
+
+        /* Dashboard specific styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 1.5rem;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+        .dashboard-stat {
+            background-color: var(--color-secondary);
+            transition: background-color 0.5s;
+        }
+        .dark .dashboard-stat {
+            background-color: var(--color-secondary);
+            color: var(--color-text);
+        }
+        .log-area {
+            height: 180px;
+            overflow-y: auto;
+            background-color: var(--color-secondary);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            line-height: 1.25;
+            color: var(--color-text);
+            border: 1px solid rgba(0,0,0,0.1);
+            transition: all 0.5s;
+        }
+        .dark .log-area {
+            background-color: var(--color-secondary);
+            color: var(--color-text);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .toggle {
+            width: 46px; height: 26px; background: #e0e0e0; border-radius: 999px; position: relative; cursor: pointer; border: 1px solid rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .knob {
+            width: 20px; height: 20px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: all .18s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle.on { background: var(--color-accent); border-color: var(--color-accent); }
+        .toggle.on .knob { left: 22px; background: #fff; }
+    </style>
+</head>
+<body class="font-body">
+
+    <!-- DARK MODE TOGGLE & HEADER -->
+    <header class="p-4 flex justify-end sticky top-0 z-50 bg-[var(--color-bg)] transition duration-500 shadow-md">
+        <button id="dark-mode-toggle" class="p-2 rounded-full text-[var(--color-text)] hover:bg-[var(--color-secondary)]">
+            <i data-lucide="moon" id="dark-mode-icon" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- HERO SECTION (1) -->
+    <section id="hero" class="flex items-center justify-center text-center p-8 relative -mt-16">
+        <div class="max-w-4xl text-white backdrop-blur-sm bg-black/30 p-8 md:p-12 rounded-2xl shadow-2xl">
+            <h1 class="font-heading text-4xl md:text-6xl font-extrabold mb-4 leading-tight">
+                Economic Evaluation and Optimization of a <span class="text-[var(--color-secondary)]">Smart Campus Infrastructure</span>
+            </h1>
+            <h2 id="subtitle" class="font-heading text-xl md:text-2xl font-semibold mb-8 opacity-0 transition-opacity duration-1000 transform translate-y-4">
+                Building a Sustainable, Cost-Efficient, and Technologically Advanced Educational Ecosystem
+            </h2>
+            <button id="explore-button" class="bg-[var(--color-accent)] hover:bg-[#157a6f] text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 uppercase tracking-wider text-lg">
+                Explore Project
+            </button>
+            <p class="mt-12 text-sm md:text-base text-white/70">
+                By **Pradipta Chandra Giri** | Roll No: 2402110050 | B.Tech CSE | VSSUT Burla
+            </p>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="py-16">
+        
+        <!-- INTERACTIVE CAMPUS MAP/OVERVIEW (2 & 6 Combined) -->
+        <section id="introduction" class="max-w-6xl mx-auto px-6 py-16">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)] fade-in-scroll">
+                Interactive Campus Overview
+            </h2>
+            <div class="relative p-8 rounded-2xl shadow-xl border border-[var(--color-accent)] bg-[var(--color-card)] fade-in-scroll">
+                <!-- Simplified Campus Map SVG Placeholder with Interactive Icons -->
+                <svg viewBox="0 0 100 60" class="w-full h-auto max-h-96">
+                    <rect x="5" y="5" width="90" height="50" fill="var(--color-secondary)" rx="5" ry="5" opacity="0.5"/>
+                    <rect x="10" y="20" width="20" height="30" fill="var(--color-bg)" stroke="var(--color-primary)" stroke-width="0.5" rx="2" ry="2"/>
+                    <rect x="70" y="25" width="20" height="25" fill="var(--color-bg)" stroke="var(--color-primary)" stroke-width="0.5" rx="2" ry="2"/>
+                    <path d="M 30 35 L 70 35 L 70 50 L 30 50 Z" fill="#d1d5db" />
+                    <text x="50" y="15" fill="var(--color-text)" font-size="5" text-anchor="middle">VSSUT Smart Campus Model</text>
+
+                    <!-- Interactive Map Icons (IoT, Solar, AI, EV) -->
+                    <!-- Note: The tooltips are attached via JS/CSS outside the SVG to make them responsive -->
+                    
+                    <!-- IoT Sensors -->
+                    <g class="map-icon cursor-pointer transform hover:scale-125 transition duration-200" transform="translate(15, 25)">
+                        <circle r="3" fill="var(--color-accent)"/>
+                        <text y="-5" fill="var(--color-text)" font-size="3" text-anchor="middle"><tspan dx="1" dy="-5" font-family="sans-serif">⚙️</tspan></text>
+                        <div class="map-icon-tooltip absolute top-[40%] left-[10%] p-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap -translate-x-1/2 -translate-y-1/2">Sensor Grid (IoT)</div>
+                    </g>
+                    <!-- Solar Area -->
+                    <g class="map-icon cursor-pointer transform hover:scale-125 transition duration-200" transform="translate(80, 25)">
+                        <circle r="3" fill="var(--color-accent)"/>
+                        <text y="-5" fill="var(--color-text)" font-size="3" text-anchor="middle"><tspan dx="1" dy="-5" font-family="sans-serif">☀️</tspan></text>
+                        <div class="map-icon-tooltip absolute top-[40%] left-[85%] p-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap -translate-x-1/2 -translate-y-1/2">Solar Area ☀️</div>
+                    </g>
+                    <!-- AI Control Center -->
+                    <g class="map-icon cursor-pointer transform hover:scale-125 transition duration-200" transform="translate(50, 45)">
+                        <circle r="3" fill="var(--color-accent)"/>
+                        <text y="-5" fill="var(--color-text)" font-size="3" text-anchor="middle"><tspan dx="1" dy="-5" font-family="sans-serif">🧠</tspan></text>
+                        <div class="map-icon-tooltip absolute top-[70%] left-[50%] p-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap -translate-x-1/2 -translate-y-1/2">AI Control Center</div>
+                    </g>
+                    <!-- EV Charging -->
+                    <g class="map-icon cursor-pointer transform hover:scale-125 transition duration-200" transform="translate(45, 50)">
+                        <circle r="3" fill="var(--color-accent)"/>
+                        <text y="-5" fill="var(--color-text)" font-size="3" text-anchor="middle"><tspan dx="1" dy="-5" font-family="sans-serif">⚡</tspan></text>
+                        <div class="map-icon-tooltip absolute top-[75%] left-[45%] p-2 bg-gray-800 text-white text-xs rounded-lg whitespace-nowrap -translate-x-1/2 -translate-y-1/2">EV Charging ⚡</div>
+                    </g>
+
+                </svg>
+                <p class="text-center mt-4 text-sm text-[var(--color-text)]">
+                    Hover over the nodes to see the implemented smart systems.
+                </p>
+            </div>
+        </section>
+
+        <!-- LIVE ENERGY MONITORING & ECO-IMPACT (2 & 3 Combined) -->
+        <section id="live-dashboard" class="max-w-6xl mx-auto px-6 py-16">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)] fade-in-scroll">
+                Live Campus Snapshot & Eco-Impact
+            </h2>
+            <div class="grid lg:grid-cols-3 gap-6">
+                <!-- Live Data Demo - NOTE: The data for this section is now driven by the core simulation in the new JS code. -->
+                <div class="lg:col-span-2 p-6 rounded-xl shadow-2xl bg-[var(--color-card)] border border-[var(--color-accent)] fade-in-scroll">
+                    <h3 class="font-heading text-xl font-bold mb-4 text-[var(--color-accent)]">Real-Time Data Flow (Simulated)</h3>
+                    <div class="grid sm:grid-cols-3 gap-4 text-center">
+                        <div class="p-4 rounded-lg dashboard-stat">
+                            <i data-lucide="bar-chart-2" class="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"></i>
+                            <p class="text-sm font-medium">Voltage (V)</p>
+                            <p id="valA-v" class="font-heading text-3xl font-extrabold">--</p>
+                        </div>
+                        <div class="p-4 rounded-lg dashboard-stat">
+                            <i data-lucide="battery-charging" class="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"></i>
+                            <p class="text-sm font-medium">Current (A)</p>
+                            <p id="valB-i" class="font-heading text-3xl font-extrabold">--</p>
+                        </div>
+                        <div class="p-4 rounded-lg dashboard-stat">
+                            <i data-lucide="cloud-off" class="w-8 h-8 mx-auto mb-2 text-[var(--color-primary)]"></i>
+                            <p class="text-sm font-medium">Power (W)</p>
+                            <p id="valC-p" class="font-heading text-3xl font-extrabold">--</p>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-sm text-center text-gray-500 dark:text-gray-400">Last Telemetry Update: <span id="lastUpdate">—</span></p>
+                </div>
+
+                <!-- Eco-Impact Visualizer (Counters) -->
+                <div class="lg:col-span-1 p-6 rounded-xl shadow-2xl bg-[var(--color-card)] border border-[var(--color-primary)] fade-in-scroll">
+                    <h3 class="font-heading text-xl font-bold mb-4 text-[var(--color-primary)]">Cumulative Eco-Impact</h3>
+                    <div class="space-y-4">
+                         <div class="flex justify-between items-center border-b pb-2">
+                            <span class="text-lg font-medium">🌿 Trees Saved:</span>
+                            <p class="font-heading text-2xl font-bold text-[var(--color-accent)]"><span class="eco-counter" data-target="52">0</span></p>
+                        </div>
+                        <div class="flex justify-between items-center border-b pb-2">
+                            <span class="text-lg font-medium">☀️ Solar Energy Produced:</span>
+                            <p class="font-heading text-2xl font-bold text-[var(--color-accent)]"><span class="eco-counter" data-target="4000">0</span> kWh</p>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-lg font-medium">💨 CO₂ Reduced:</span>
+                            <p class="font-heading text-2xl font-bold text-[var(--color-accent)]"><span class="eco-counter" data-target="1.2" data-decimal="1">0.0</span> tons</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- INTERACTIVE ECONOMIC CALCULATOR (1) -->
+        <section id="calculator" class="max-w-6xl mx-auto px-6 py-16 bg-[var(--color-secondary)] rounded-xl shadow-2xl fade-in-scroll">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)]">
+                ROI Simulation & Economic Evaluation
+            </h2>
+            <div class="grid lg:grid-cols-2 gap-8">
+                <!-- Input Sliders -->
+                <div class="p-6 bg-[var(--color-card)] rounded-xl shadow-lg">
+                    <h3 class="font-heading text-xl font-bold mb-4 text-[var(--color-accent)]">Adjust Parameters</h3>
+                    
+                    <div class="mb-6">
+                        <label for="energyUsage" class="block text-sm font-medium mb-1">Baseline Annual Energy Usage: <span id="usage-value" class="font-semibold text-[var(--color-primary)]">4,500,000</span> kWh</label>
+                        <input type="range" id="energyUsage" min="1000000" max="10000000" step="500000" value="4500000" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="solarInvestment" class="block text-sm font-medium mb-1">Solar & IoT Investment: ₹<span id="investment-value" class="font-semibold text-[var(--color-primary)]">5,00,00,000</span></label>
+                        <input type="range" id="solarInvestment" min="10000000" max="100000000" step="5000000" value="50000000" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="costPerUnit" class="block text-sm font-medium mb-1">Cost Per Unit (Average): ₹<span id="cost-value" class="font-semibold text-[var(--color-primary)]">8.50</span>/kWh</label>
+                        <input type="range" id="costPerUnit" min="5" max="15" step="0.5" value="8.5" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                    </div>
+                </div>
+
+                <!-- Calculated Results -->
+                <div class="p-6 bg-[var(--color-card)] rounded-xl shadow-lg">
+                    <h3 class="font-heading text-xl font-bold mb-4 text-[var(--color-primary)]">Calculated Financial Metrics</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Annual Operational Savings (Est.)</p>
+                            <p class="font-heading text-3xl font-extrabold text-[var(--color-accent)]">₹<span id="yearlySavings">0</span></p>
+                        </div>
+                        <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Payback Period (Years)</p>
+                            <p class="font-heading text-3xl font-extrabold text-red-500"><span id="paybackPeriod">0.0</span></p>
+                        </div>
+                        <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total ROI (Over 10 Years)</p>
+                            <p class="font-heading text-3xl font-extrabold text-[var(--color-primary)]"><span id="totalROI">0</span>%</p>
+                        </div>
+                    </div>
+                    <p class="mt-4 text-xs italic text-gray-500 dark:text-gray-400">Based on a fixed 30% reduction in energy usage and 20% operational cost savings.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- OBJECTIVES SECTION (3) -->
+        <section id="objectives" class="max-w-6xl mx-auto px-6 py-12">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)] fade-in-scroll">
+                Core Objectives of the Study
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+                <!-- Objective Card 1: Economic Performance -->
+                <div class="objective-card p-6 rounded-xl shadow-xl transition fade-in-scroll">
+                    <div class="flex justify-center mb-4">
+                        <i data-lucide="wallet" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-center mb-1">Economic Performance</h3>
+                    <p class="text-xs text-gray-500 text-center dark:text-gray-400">Cost Savings & Revenue</p>
+                </div>
+
+                <!-- Objective Card 2: Cost–Benefit Ratio -->
+                <div class="objective-card p-6 rounded-xl shadow-xl transition fade-in-scroll">
+                    <div class="flex justify-center mb-4">
+                        <i data-lucide="scale" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-center mb-1">Cost–Benefit Ratio</h3>
+                    <p class="text-xs text-gray-500 text-center dark:text-gray-400">Viability & Long-term ROI</p>
+                </div>
+
+                <!-- Objective Card 3: Predictive Analytics -->
+                <div class="objective-card p-6 rounded-xl shadow-xl transition fade-in-scroll">
+                    <div class="flex justify-center mb-4">
+                        <i data-lucide="trending-up" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-center mb-1">Predictive Analytics</h3>
+                    <p class="text-xs text-gray-500 text-center dark:text-gray-400">AI Forecasting & Optimization</p>
+                </div>
+
+                <!-- Objective Card 4: Scalable Implementation -->
+                <div class="objective-card p-6 rounded-xl shadow-xl transition fade-in-scroll">
+                    <div class="flex justify-center mb-4">
+                        <i data-lucide="puzzle" class="w-10 h-10 text-[var(--color-primary)]"></i>
+                    </div>
+                    <h3 class="font-heading text-xl font-bold text-center mb-1">Scalable Implementation</h3>
+                    <p class="text-xs text-gray-500 text-center dark:text-gray-400">Modular Framework</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- METHODOLOGY & AI INSIGHTS (4 & 5 Combined) -->
+        <section id="methodology" class="py-16 bg-[var(--color-secondary)] border-t border-b border-gray-200">
+            <div class="max-w-6xl mx-auto px-6">
+                <h2 class="font-heading text-3xl md:text-4xl font-bold mb-12 text-center text-[var(--color-primary)] fade-in-scroll">
+                    Our Approach & AI Insights
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+
+                    <!-- Step 1: Data Collection -->
+                    <div class="flex flex-col items-center text-center p-6 rounded-xl bg-[var(--color-card)] shadow-2xl z-10 transition duration-500 fade-in-scroll">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white font-bold text-lg mb-3">1</div>
+                        <i data-lucide="scan" class="text-[var(--color-accent)] w-6 h-6 mb-1"></i>
+                        <h3 class="font-heading text-base font-semibold text-[var(--color-text)]">Data Collection</h3>
+                    </div>
+
+                    <!-- Step 2: Economic Analysis -->
+                    <div class="flex flex-col items-center text-center p-6 rounded-xl bg-[var(--color-card)] shadow-2xl z-10 transition duration-500 fade-in-scroll md:mt-8">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white font-bold text-lg mb-3">2</div>
+                        <i data-lucide="line-chart" class="text-[var(--color-accent)] w-6 h-6 mb-1"></i>
+                        <h3 class="font-heading text-base font-semibold text-[var(--color-text)]">Economic Analysis</h3>
+                    </div>
+
+                    <!-- Step 3: Optimization -->
+                    <div class="flex flex-col items-center text-center p-6 rounded-xl bg-[var(--color-card)] shadow-2xl z-10 transition duration-500 fade-in-scroll">
+                        <div class="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--color-primary)] text-white font-bold text-lg mb-3">3</div>
+                        <i data-lucide="cpu" class="text-[var(--color-accent)] w-6 h-6 mb-1"></i>
+                        <h3 class="font-heading text-base font-semibold text-[var(--color-text)]">Optimization</h3>
+                    </div>
+                    
+                    <!-- AI Insight Card -->
+                    <div class="p-6 rounded-xl bg-[var(--color-accent)] text-white shadow-2xl z-10 transition duration-500 fade-in-scroll md:mt-8">
+                        <div class="flex items-center mb-2">
+                            <i data-lucide="lightbulb" class="w-6 h-6 mr-2"></i>
+                            <h3 class="font-heading text-lg font-bold">AI Recommendation</h3>
+                        </div>
+                        <p class="text-sm">
+                            Adding **20 more solar panels** to the Library block can increase the projected 10-year ROI by **12%** due to maximized peak generation.
+                        </p>
+                    </div>
+
+                    <!-- Flow Arrows (Desktop only) -->
+                    <div class="hidden md:block absolute top-12 w-3/4 h-1 pointer-events-none left-1/2 transform -translate-x-1/2">
+                        <i data-lucide="arrow-right-circle" class="absolute left-[25%] top-0 text-[var(--color-primary)] w-5 h-5 transform -translate-x-1/2 -translate-y-1/2"></i>
+                        <i data-lucide="arrow-right-circle" class="absolute left-[50%] top-0 text-[var(--color-primary)] w-5 h-5 transform -translate-x-1/2 -translate-y-1/2"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- RESULTS & EVALUATION SECTION (7) -->
+        <section id="results" class="max-w-6xl mx-auto px-6 py-16">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)] fade-in-scroll">
+                Projected Economic Evaluation & Results
+            </h2>
+            <div class="grid lg:grid-cols-3 gap-10 items-start">
+                <!-- KPI Highlights -->
+                <div class="lg:col-span-1 space-y-6 fade-in-scroll">
+                    <h3 class="font-heading text-2xl font-semibold text-[var(--color-accent)] mb-4">Key Performance Indicators</h3>
+                    
+                    <div class="p-5 rounded-xl bg-[var(--color-secondary)] dark:bg-gray-700 shadow-md border-l-4 border-[var(--color-primary)]">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Target Reduction in Energy Use</p>
+                        <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]"><span class="counter" data-target="30">0</span>% <span class="text-xl">⚡</span></p>
+                    </div>
+
+                    <div class="p-5 rounded-xl bg-[var(--color-secondary)] dark:bg-gray-700 shadow-md border-l-4 border-[var(--color-primary)]">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Target Operational Cost Savings</p>
+                        <p class="font-heading text-4xl font-extrabold text-[var(--color-primary)]"><span class="counter" data-target="20">0</span>% <span class="text-xl">💰</span></p>
+                    </div>
+                    
+                    <div class="p-5 rounded-xl bg-[var(--color-secondary)] dark:bg-gray-700 shadow-md border-l-4 border-red-500">
+                        <p class="text-sm font-medium text-gray-600 dark:text-gray-300">Estimated Payback Period</p>
+                        <p class="font-heading text-4xl font-extrabold text-red-500">3.5 Years <span class="text-xl">⏱️</span></p>
+                    </div>
+                </div>
+
+                <!-- Interactive Chart Simulation -->
+                <div class="lg:col-span-2 bg-[var(--color-card)] p-6 rounded-xl shadow-2xl border border-gray-100 fade-in-scroll">
+                    <h3 class="font-heading text-xl font-semibold mb-6 text-center">Investment, Savings, and Payback Visualization</h3>
+                    <div id="chart-container" class="h-64 flex items-end justify-around space-x-4 border-l border-b border-gray-300 dark:border-gray-600 p-2 relative">
+                        <!-- Chart bars populated by JS -->
+                    </div>
+                    <div class="flex justify-around text-xs mt-2 text-gray-600 dark:text-gray-400">
+                        <p>Year 1</p>
+                        <p>Year 2</p>
+                        <p>Year 3</p>
+                        <p class="text-red-500 font-bold">Payback (3.5)</p>
+                        <p>Year 4</p>
+                        <p>Year 5</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Monitoring Dashboard (NEW SECTION 8) -->
+        <section id="monitoring-dashboard" class="max-w-6xl mx-auto px-6 py-16">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-10 text-center text-[var(--color-primary)] fade-in-scroll">
+                Real-Time Monitoring & Remote Control
+            </h2>
+            <div class="dashboard-grid fade-in-scroll">
+                <!-- Live Chart and Overview -->
+                <section class="p-6 rounded-xl shadow-2xl bg-[var(--color-card)] border border-gray-100">
+                    <h3 class="font-heading text-xl font-semibold mb-3">Live Telemetry</h3>
+                    
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            Auto-scale
+                            <div id="autoscaleToggle" class="toggle on inline-block ml-2 align-middle" role="switch" aria-checked="true">
+                                <div class="knob"></div>
+                            </div>
+                        </div>
+                        <div class="text-sm font-medium">Source: <span id="sourceStatus">Simulated</span></div>
+                    </div>
+                    
+                    <div id="realtimeChartWrap" class="h-64 mb-4">
+                        <canvas id="realtimeChart" aria-label="Real-time data chart"></canvas>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <button id="pauseChart" class="bg-gray-200 dark:bg-gray-700 text-[var(--color-text)] hover:bg-gray-300 dark:hover:bg-gray-600 py-1 px-3 rounded-lg text-sm transition">Pause Chart</button>
+                        <button id="clearHistory" class="bg-red-500 text-white hover:bg-red-600 py-1 px-3 rounded-lg text-sm transition">Clear History</button>
+                        <button id="toggleSim" class="bg-[var(--color-accent)] text-white hover:bg-[#157a6f] py-1 px-3 rounded-lg text-sm transition">Toggle Source</button>
+                        <button id="exportCsv" class="bg-[var(--color-primary)] text-white hover:bg-[#085e35] py-1 px-3 rounded-lg text-sm transition">Export CSV</button>
+                    </div>
+                </section>
+
+                <!-- Remote Controls -->
+                <aside class="p-6 rounded-xl shadow-2xl bg-[var(--color-card)] border border-gray-100">
+                    <h3 class="font-heading text-xl font-semibold mb-4">Remote Controls</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Cooling Fan -->
+                        <div class="flex justify-between items-center pb-2 border-b dark:border-gray-700">
+                            <div>
+                                <div class="font-semibold">Cooling Fan</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">Turn ON/OFF the cooling fan remotely</div>
+                            </div>
+                            <button id="fanBtn" class="bg-[var(--color-primary)] text-white hover:bg-[#085e35] py-1 px-3 rounded-lg text-sm transition">Toggle</button>
+                        </div>
+
+                        <!-- Heater -->
+                        <div class="flex justify-between items-center pb-2 border-b dark:border-gray-700">
+                            <div>
+                                <div class="font-semibold">Heater (Safety Protected)</div>
+                                <div class="text-xs text-red-500 dark:text-red-400">Requires confirmation for safety compliance</div>
+                            </div>
+                            <button id="heaterBtn" class="bg-red-500 text-white hover:bg-red-600 py-1 px-3 rounded-lg text-sm transition">Toggle</button>
+                        </div>
+                        
+                        <!-- PWM Control -->
+                        <div>
+                            <div class="font-semibold mb-2">Set PWM (0-255)</div>
+                            <input id="pwmRange" type="range" min="0" max="255" value="128" class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer range-lg">
+                            <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">Current PWM: <span id="pwmVal">128</span></div>
+                            <div class="flex gap-2 mt-3">
+                                <button id="applyPwm" class="bg-[var(--color-accent)] text-white hover:bg-[#157a6f] py-1 px-3 rounded-lg text-sm transition">Apply</button>
+                                <button id="resetPwm" class="bg-gray-200 dark:bg-gray-700 text-[var(--color-text)] hover:bg-gray-300 dark:hover:bg-gray-600 py-1 px-3 rounded-lg text-sm transition">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Event Log -->
+                <section class="lg:col-span-2 p-6 rounded-xl shadow-2xl bg-[var(--color-card)] border border-gray-100">
+                    <h3 class="font-heading text-xl font-semibold mb-3">System Event Log (<span id="bufSize">0</span> entries)</h3>
+                    <div class="log-area" id="logArea" aria-live="polite" role="log"></div>
+                    <div class="flex justify-between items-center mt-3">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Simulated network traffic. For real connection, adjust WS URL.
+                        </div>
+                        <button id="downloadLog" class="bg-gray-200 dark:bg-gray-700 text-[var(--color-text)] hover:bg-gray-300 dark:hover:bg-gray-600 py-1 px-3 rounded-lg text-sm transition">Download Log</button>
+                    </div>
+                </section>
+
+            </div>
+        </section>
+        <!-- End Monitoring Dashboard -->
+
+        <!-- IMPACT SECTION (8) -->
+        <section id="impact" class="py-16 bg-[var(--color-secondary)] border-t border-gray-200">
+            <div class="max-w-6xl mx-auto px-6 text-center">
+                <h2 class="font-heading text-3xl md:text-4xl font-bold mb-8 text-[var(--color-primary)] fade-in-scroll">
+                    Smart Campus → Smart City Expansion Visual
+                </h2>
+                <div class="grid md:grid-cols-2 gap-10 items-center">
+                    <div class="text-left fade-in-scroll">
+                        <p class="text-lg md:text-xl leading-relaxed mb-6">
+                            The Smart Campus model serves as a robust, tested blueprint for <span class="font-semibold text-[var(--color-accent)]">scaling sustainable urban infrastructure</span> and city-wide energy optimization. This localized success story is ready for global application.
+                        </p>
+                        <p class="text-base italic text-gray-600 dark:text-gray-400">
+                            From Campus to City — Expanding Sustainable Intelligence.
+                        </p>
+                        <div class="mt-6 flex flex-wrap gap-4 text-sm font-medium">
+                            <span class="bg-gray-700 dark:bg-gray-900 text-white px-3 py-1 rounded-full"><i data-lucide="factory" class="w-4 h-4 inline mr-1"></i> Industry</span>
+                            <span class="bg-gray-700 dark:bg-gray-900 text-white px-3 py-1 rounded-full"><i data-lucide="bus" class="w-4 h-4 inline mr-1"></i> Transport</span>
+                            <span class="bg-gray-700 dark:bg-gray-900 text-white px-3 py-1 rounded-full"><i data-lucide="droplet" class="w-4 h-4 inline mr-1"></i> Water Grid</span>
+                        </div>
+                    </div>
+                    <!-- Visual: Connected City Graphic with animation (Enhanced SVG) -->
+                    <div class="flex justify-center p-4 fade-in-scroll">
+                        <svg class="w-full max-w-sm h-auto" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <!-- City Nodes (Primary Green) -->
+                            <circle cx="20" cy="50" r="4" fill="var(--color-accent)" class="shadow-lg transition-transform duration-500 hover:scale-125">
+                                <animate attributeName="opacity" values="1; 0.5; 1" dur="2s" repeatCount="indefinite" />
+                            </circle>
+                            <text x="20" y="58" class="text-xs" fill="var(--color-text)" text-anchor="middle">Smart Campus</text>
+                            
+                            <circle cx="70" cy="25" r="3" fill="var(--color-primary)"/>
+                            <circle cx="55" cy="75" r="3" fill="var(--color-primary)"/>
+                            <circle cx="85" cy="60" r="3" fill="var(--color-primary)"/>
+                            
+                            <!-- Connecting Line Animation -->
+                            <path d="M20,50 C40,40 60,30 70,25" stroke="var(--color-accent)" stroke-width="1" fill="none" stroke-dasharray="100" stroke-dashoffset="100">
+                                <animate attributeName="stroke-dashoffset" values="100; 0" dur="4s" repeatCount="indefinite" />
+                            </path>
+                            <path d="M20,50 C30,70 50,80 55,75" stroke="var(--color-accent)" stroke-width="1" fill="none" stroke-dasharray="100" stroke-dashoffset="100">
+                                <animate attributeName="stroke-dashoffset" values="100; 0" begin="1s" dur="4s" repeatCount="indefinite" />
+                            </path>
+                            <path d="M20,50 C50,45 70,55 85,60" stroke="var(--color-accent)" stroke-width="1" fill="none" stroke-dasharray="100" stroke-dashoffset="100">
+                                <animate attributeName="stroke-dashoffset" values="100; 0" begin="0.5s" dur="4s" repeatCount="indefinite" />
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CONTACT & CREDITS SECTION (7 & 9 Combined) -->
+        <section id="contact" class="max-w-6xl mx-auto px-6 py-12 text-center">
+            <h2 class="font-heading text-3xl md:text-4xl font-bold mb-6 text-[var(--color-text)] fade-in-scroll">
+                Project Credits & Resources
+            </h2>
+            <div class="bg-[var(--color-card)] p-8 rounded-xl shadow-lg inline-block fade-in-scroll">
+                <p class="font-heading text-2xl font-bold text-[var(--color-primary)] mb-2">👤 Pradipta Chandra Giri</p>
+                <p class="text-lg text-gray-700 dark:text-gray-300">🏫 VSSUT Burla | B.Tech CSE</p>
+                <p class="text-lg text-gray-700 dark:text-gray-300">Roll No: 2402110050</p>
+                
+                <div class="flex justify-center space-x-6 mt-6">
+                    <!-- LinkedIn -->
+                    <a href="#" target="_blank" class="text-[var(--color-accent)] hover:text-[var(--color-primary)] transition duration-300">
+                        <i data-lucide="linkedin" class="w-8 h-8"></i>
+                    </a>
+                    <!-- GitHub -->
+                    <a href="#" target="_blank" class="text-[var(--color-accent)] hover:text-[var(--color-primary)] transition duration-300">
+                        <i data-lucide="github" class="w-8 h-8"></i>
+                    </a>
+                    <!-- Email -->
+                    <a href="mailto:pradipta.chandra@vssut.ac.in" class="text-[var(--color-accent)] hover:text-[var(--color-primary)] transition duration-300">
+                        <i data-lucide="mail" class="w-8 h-8"></i>
+                    </a>
+                </div>
+
+                <div class="mt-8">
+                    <a href="#" class="inline-flex items-center bg-[var(--color-primary)] text-white font-medium py-2 px-4 rounded-full hover:bg-[#085e35] transition">
+                        <i data-lucide="download" class="w-4 h-4 mr-2"></i> Download Full Report Summary (PDF)
+                    </a>
+                </div>
+            </div>
+            <p class="mt-8 text-xl font-medium text-gray-700 dark:text-gray-300">Thank you for visiting and exploring the future of sustainable education!</p>
+        </section>
+
+    </main>
+
+    <footer class="bg-[var(--color-primary)] p-4 text-center text-sm text-white font-medium">
+        Empowering Education Through Sustainable Innovation
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- 1. CORE CONFIG & DATA ---
+        const CHART_DATA = [
+            { label: 'Y1', savings: 15, investment: 100, color: 'var(--color-accent)' },
+            { label: 'Y2', savings: 40, investment: 100, color: 'var(--color-accent)' },
+            { label: 'Y3', savings: 65, investment: 100, color: 'var(--color-accent)' },
+            { label: 'Y3.5', savings: 85, investment: 100, color: 'rgb(239, 68, 68)' }, // Red: Payback
+            { label: 'Y4', savings: 120, investment: 100, color: 'var(--color-primary)' },
+            { label: 'Y5', savings: 160, investment: 100, color: 'var(--color-primary)' },
+        ];
+        const MAX_CHART_VALUE = 160;
+        const WS_URL = 'ws://localhost:8080';
+        let useSimulated = true;
+        let simInterval = null;
+        let ws = null;
+        let autoscale = true;
+        let chartPaused = false;
+        let history = []; // array of log entries
+        const MAX_CHART_POINTS = 60;
+
+
+        // --- 2. DOM ELEMENTS ---
+        const lastUpdateEl = document.getElementById('lastUpdate');
+        const valAEl = document.getElementById('valA-v'); // Voltage
+        const valBEl = document.getElementById('valB-i'); // Current
+        const valCEl = document.getElementById('valC-p'); // Power
+        const logArea = document.getElementById('logArea');
+        const bufSizeEl = document.getElementById('bufSize');
+
+        // Dashboard controls
+        const toggleSimBtn = document.getElementById('toggleSim');
+        const autoscaleToggle = document.getElementById('autoscaleToggle');
+        const pauseChartBtn = document.getElementById('pauseChart');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const exportCsvBtn = document.getElementById('exportCsv');
+        const downloadLogBtn = document.getElementById('downloadLog');
+
+        const fanBtn = document.getElementById('fanBtn');
+        const heaterBtn = document.getElementById('heaterBtn');
+        const pwmRange = document.getElementById('pwmRange');
+        const pwmValEl = document.getElementById('pwmVal');
+        const applyPwmBtn = document.getElementById('applyPwm');
+        const resetPwmBtn = document.getElementById('resetPwm');
+        const sourceStatusEl = document.getElementById('sourceStatus');
+
+
+        // --- 3. UTILITY FUNCTIONS ---
+        
+        // Function for counter animation (used for KPI and Eco-Impact)
+        function animateCounter(element, start, end, duration, decimals = 0) {
+            let startTime = null;
+            const isDecimal = decimals > 0;
+            
+            const step = (timestamp) => {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                let value = start + (progress * (end - start));
+                
+                if (isDecimal) {
+                    element.textContent = value.toFixed(decimals);
+                } else {
+                    element.textContent = Math.ceil(value);
+                }
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    element.textContent = isDecimal ? end.toFixed(decimals) : end;
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(num);
+        }
+
+        function log(msg, level='info'){
+            const ts = new Date().toLocaleTimeString();
+            const line = `[${ts}] ${msg}`;
+            const div = document.createElement('div');
+            div.textContent = line;
+            // Apply different text color for commands for visual distinction
+            if(msg.startsWith('Sent command') || msg.startsWith('Simulated send')) {
+                div.style.color = 'var(--color-accent)';
+            }
+            logArea.prepend(div);
+            // Limit log display to prevent lag
+            if (logArea.children.length > 50) {
+                logArea.removeChild(logArea.lastChild);
+            }
+            history.push({ts: new Date().toISOString(), msg});
+            bufSizeEl.textContent = history.length;
+            // keep session storage small (for the underlying feature)
+            if(history.length > 2000) history.shift();
+        }
+
+
+        // --- 4. DARK MODE TOGGLE ---
+
+        const htmlEl = document.documentElement;
+        const toggleButton = document.getElementById('dark-mode-toggle');
+        const icon = document.getElementById('dark-mode-icon');
+        const sliders = {
+            usage: document.getElementById('energyUsage'),
+            investment: document.getElementById('solarInvestment'),
+            cost: document.getElementById('costPerUnit')
+        };
+        const outputEls = {
+            usage: document.getElementById('usage-value'),
+            investment: document.getElementById('investment-value'),
+            cost: document.getElementById('cost-value'),
+            savings: document.getElementById('yearlySavings'),
+            payback: document.getElementById('paybackPeriod'),
+            roi: document.getElementById('totalROI')
+        };
+
+        function toggleDarkMode() {
+            if (htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                icon.setAttribute('data-lucide', 'moon');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlEl.classList.add('dark');
+                icon.setAttribute('data-lucide', 'sun');
+                localStorage.setItem('theme', 'dark');
+            }
+            lucide.createIcons();
+            updateCalculator(); // Update calculator results to refresh colors
+            // Update chart colors on theme change
+            if (realtimeChart) {
+                const chartColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text');
+                realtimeChart.options.scales.x.ticks.color = chartColor;
+                realtimeChart.options.scales.y.ticks.color = chartColor;
+                realtimeChart.options.plugins.legend.labels.color = chartColor;
+                realtimeChart.options.scales.y.grid.color = htmlEl.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+                realtimeChart.update('none');
+            }
+        }
+
+        // Set initial theme based on local storage or system preference
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlEl.classList.add('dark');
+            icon.setAttribute('data-lucide', 'sun');
+        }
+
+        toggleButton.addEventListener('click', toggleDarkMode);
+
+
+        // --- 5. ECONOMIC CALCULATOR LOGIC ---
+
+        function updateCalculator() {
+            const usage = parseFloat(sliders.usage.value);
+            const investment = parseFloat(sliders.investment.value);
+            const cost = parseFloat(sliders.cost.value);
+
+            // Update slider displays
+            outputEls.usage.textContent = formatCurrency(usage);
+            outputEls.investment.textContent = formatCurrency(investment);
+            outputEls.cost.textContent = cost.toFixed(2);
+
+            // Calculations
+            const annualEnergySavings = usage * 0.30 * cost;
+            const annualOperationalSavings = usage * cost * 0.20;
+            const totalAnnualSavings = annualEnergySavings + (annualOperationalSavings * 0.5);
+            
+            const payback = totalAnnualSavings > 0 ? investment / totalAnnualSavings : 0;
+            const netProfit = (totalAnnualSavings * 10) - investment;
+            const totalROI = investment > 0 ? Math.round((netProfit / investment) * 100) : 0;
+
+            // Output results
+            outputEls.savings.textContent = formatCurrency(Math.round(totalAnnualSavings));
+            outputEls.payback.textContent = payback.toFixed(1);
+            outputEls.roi.textContent = totalROI;
+        }
+
+        // Attach calculator listeners
+        Object.values(sliders).forEach(slider => {
+            slider.addEventListener('input', updateCalculator);
+        });
+        updateCalculator(); // Initial run
+
+        
+        // --- 6. REAL-TIME MONITORING LOGIC (Chart.js) ---
+
+        const ctx = document.getElementById('realtimeChart').getContext('2d');
+        const chartColor = getComputedStyle(document.documentElement).getPropertyValue('--color-text');
+        
+        const chartData = {
+            labels: [],
+            datasets: [
+                { label: 'Voltage (V)', data: [], tension:0.3, pointRadius:0, borderWidth:2, borderColor: 'var(--color-primary)' },
+                { label: 'Current (A)', data: [], tension:0.3, pointRadius:0, borderWidth:2, borderColor: 'var(--color-accent)' },
+                { label: 'Power (W)', data: [], tension:0.3, pointRadius:0, borderWidth:2, borderColor: 'rgb(251, 191, 36)' } // Tailwind Amber 400
+            ]
+        };
+        const realtimeChart = new Chart(ctx, {
+            type:'line',
+            data:chartData,
+            options:{
+                responsive:true, maintainAspectRatio:false,
+                interaction:{mode:'index',intersect:false},
+                plugins:{legend:{labels:{color:chartColor}}},
+                scales:{
+                    x:{grid:{display:false}, ticks:{color:chartColor}},
+                    y:{ticks:{color:chartColor}, grid:{color:htmlEl.classList.contains('dark') ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}}
+                }
+            }
+        });
+
+        function pushPoint(ts, v, i, p){
+            if(chartPaused) return;
+
+            chartData.labels.push(new Date(ts).toLocaleTimeString());
+            chartData.datasets[0].data.push(v);
+            chartData.datasets[1].data.push(i);
+            chartData.datasets[2].data.push(p);
+
+            // trim history
+            while(chartData.labels.length > MAX_CHART_POINTS){
+                chartData.labels.shift();
+                chartData.datasets.forEach(d => d.data.shift());
+            }
+            realtimeChart.update('none');
+        }
+
+        function handleIncoming(msg){
+            if(msg.type === 'telemetry'){
+                const ts = msg.ts || new Date().toISOString();
+                const v = parseFloat(msg.voltage);
+                const i = parseFloat(msg.current);
+                const p = parseFloat(msg.power !== undefined ? msg.power : (v * i));
+
+                // Update UI dashboard values
+                valAEl.textContent = (v !== undefined && !isNaN(v)) ? v.toFixed(2) : '--';
+                valBEl.textContent = (i !== undefined && !isNaN(i)) ? i.toFixed(3) : '--';
+                valCEl.textContent = (p !== undefined && !isNaN(p)) ? p.toFixed(3) : '--';
+                lastUpdateEl.textContent = new Date(ts).toLocaleTimeString();
+                
+                pushPoint(ts, v, i, p);
+                // log(`Telemetry — V:${v.toFixed(2)}V I:${i.toFixed(3)}A P:${p.toFixed(3)}W`);
+            } else if(msg.type === 'event'){
+                log('Event: ' + (msg.text || JSON.stringify(msg)));
+            } else {
+                log('Msg: ' + JSON.stringify(msg));
+            }
+        }
+
+        // Simulated data source
+        function startSim(){
+            if(simInterval) return;
+            simInterval = setInterval(()=>{
+                const baseV = 12 + Math.sin(Date.now()/5000)*1.5;
+                const jitterAmt = (Math.random()-0.5)*0.6; // Basic jitter
+                const v = +(baseV + jitterAmt).toFixed(2);
+                const i = +((0.5 + Math.abs(Math.sin(Date.now()/2000))*1.2) + (Math.random()-0.5)*0.05).toFixed(3);
+                const p = +(v * i).toFixed(3);
+                handleIncoming({type:'telemetry', ts:new Date().toISOString(), voltage:v, current:i, power:p});
+            }, 800);
+            log('Simulated data source started');
+            sourceStatusEl.textContent = 'Simulated';
+        }
+        function stopSim(){ 
+            if(simInterval){ clearInterval(simInterval); simInterval=null; log('Simulated data source stopped');}
+            // Also close WS connection if running
+            if(ws && ws.readyState === WebSocket.OPEN) ws.close();
+            sourceStatusEl.textContent = 'Stopped';
+        }
+
+        // Placeholder for WebSocket (not implemented, only logged)
+        function connectWS(url=WS_URL){
+            log('Attempting to connect to WebSocket: ' + url);
+            // Simulate failed connection
+            setTimeout(()=>{
+                log('WebSocket connection failed. Falling back to simulation if needed.');
+                if(!simInterval) startSim(); // Ensures data keeps flowing
+            }, 1500);
+        }
+
+        // --- 7. DASHBOARD CONTROL HANDLERS ---
+
+        function sendCommand(cmd){
+            const payload = {type:'command', ts:new Date().toISOString(), command:cmd};
+            // Currently only simulates sending
+            log('Simulated send: ' + cmd);
+            // Simulate acknowledgement event
+            setTimeout(()=> handleIncoming({type:'event', text:'ACK: ' + cmd, ts:new Date().toISOString()}), 500);
+        }
+
+        toggleSimBtn.addEventListener('click', ()=> {
+            if (simInterval) {
+                stopSim();
+            } else {
+                startSim();
+            }
+        });
+
+        fanBtn.addEventListener('click', ()=> {
+            if(!confirm('Are you sure you want to toggle the cooling fan?')) return;
+            sendCommand('TOGGLE_FAN');
+        });
+
+        heaterBtn.addEventListener('click', ()=> {
+            if(!confirm('Heater control requires safety confirmation. Proceed?')) return;
+            sendCommand('TOGGLE_HEATER');
+        });
+
+        pwmRange.addEventListener('input', ()=> { pwmValEl.textContent = pwmRange.value;});
+        applyPwmBtn.addEventListener('click', ()=> {
+            sendCommand('SET_PWM:' + pwmRange.value);
+            log('Applied PWM ' + pwmRange.value);
+        });
+        resetPwmBtn.addEventListener('click', ()=> { 
+            pwmRange.value = 128; pwmValEl.textContent = 128; 
+            sendCommand('SET_PWM:128 (Reset)'); 
+        });
+
+        pauseChartBtn.addEventListener('click', ()=> {
+            chartPaused = !chartPaused;
+            pauseChartBtn.textContent = chartPaused ? 'Resume Chart' : 'Pause Chart';
+            log('Chart ' + (chartPaused ? 'paused' : 'resumed'));
+        });
+        
+        clearHistoryBtn.addEventListener('click', ()=> {
+            if(!confirm('Clear history and chart data?')) return;
+            history = []; bufSizeEl.textContent = 0;
+            chartData.labels = []; chartData.datasets.forEach(d=>d.data=[]); realtimeChart.update();
+            log('History cleared');
+        });
+
+        autoscaleToggle.addEventListener('click', ()=> {
+            autoscale = !autoscale;
+            autoscaleToggle.classList.toggle('on', autoscale);
+            autoscaleToggle.setAttribute('aria-checked', autoscale ? 'true' : 'false');
+            
+            if(!autoscale){
+                // Set a sensible fixed range for demo purposes
+                realtimeChart.options.scales.y.min = 0;
+                realtimeChart.options.scales.y.max = 20; 
+            } else {
+                delete realtimeChart.options.scales.y.min;
+                delete realtimeChart.options.scales.y.max;
+            }
+            realtimeChart.update();
+            log('Autoscale ' + (autoscale ? 'enabled' : 'disabled'));
+        });
+
+        exportCsvBtn.addEventListener('click', ()=> {
+            // export buffered telemetry entries
+            const rows = history.filter(h => h.msg && h.msg.startsWith('Telemetry —')).map((h)=>{
+                // Attempt to parse structured telemetry from log line if needed, but current setup uses `handleIncoming` to avoid logging detailed telemetry
+                // Since `handleIncoming` no longer logs detailed telemetry to history to save space, we'll only export the log data.
+                return [h.ts, h.msg];
+            });
+            const csv = ['timestamp,event_message', ...rows.map(r=>r.join(','))].join('\n');
+            const filename = 'event_log_' + (new Date()).toISOString().replace(/[:.]/g,'-') + '.csv';
+            downloadText(filename, csv);
+            log('Exported Log CSV ('+rows.length+' rows)');
+        });
+
+        downloadLogBtn.addEventListener('click', ()=> {
+            const text = history.map(h => h.msg).join('\n');
+            downloadText('event_log_' + (new Date()).toISOString().replace(/[:.]/g,'-') + '.txt', text);
+        });
+
+        // File download helper (uses document.execCommand for better iFrame compatibility)
+        function downloadText(filename, text) {
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+        
+        // --- 8. SCROLL & ANIMATION OBSERVER (Kept from previous version) ---
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const resultsSection = document.getElementById('results');
+        let resultsAnimated = false;
+        let ecoAnimated = false;
+
+        const mainObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    
+                    if (entry.target.id === 'results' && !resultsAnimated) {
+                        resultsAnimated = true;
+                        
+                        document.querySelectorAll('.counter').forEach(el => {
+                            const target = parseFloat(el.getAttribute('data-target'));
+                            animateCounter(el, 0, target, 1800);
+                        });
+
+                        document.querySelectorAll('.chart-bar').forEach(bar => {
+                            const height = bar.getAttribute('data-height');
+                            bar.style.height = height;
+                        });
+                    }
+
+                    if (entry.target.id === 'live-dashboard' && !ecoAnimated) {
+                        ecoAnimated = true;
+                        document.querySelectorAll('.eco-counter').forEach(el => {
+                            const target = parseFloat(el.getAttribute('data-target'));
+                            const decimals = parseInt(el.getAttribute('data-decimal') || 0);
+                            animateCounter(el, 0, target, 2500, decimals);
+                        });
+                    }
+                    
+                    if (entry.target.classList.contains('fade-in-scroll')) {
+                        entry.target.classList.add('visible');
+                    }
+                }
+            });
+        }, { threshold: 0.1 });
+
+        // Initialize Chart Setup for the ROI section
+        const chartContainer = document.getElementById('chart-container');
+        CHART_DATA.forEach((data, index) => {
+            const savingsHeightPercentage = (data.savings / MAX_CHART_VALUE) * 100;
+            
+            const barWrapper = document.createElement('div');
+            barWrapper.className = 'flex flex-col items-center justify-end w-1/6 h-full relative z-20';
+            
+            const savingsBar = document.createElement('div');
+            savingsBar.className = `chart-bar w-3/5 rounded-t-lg shadow-md`;
+            savingsBar.style.backgroundColor = data.color; 
+            savingsBar.setAttribute('data-height', `${savingsHeightPercentage}%`);
+
+            const investmentLine = document.createElement('div');
+            investmentLine.className = 'absolute w-full border-b-2 border-dashed border-gray-400 dark:border-gray-500 opacity-50';
+            investmentLine.style.bottom = `${(data.investment / MAX_CHART_VALUE) * 100}%`;
+
+            const label = document.createElement('div');
+            label.className = 'absolute bottom-full mb-2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 transition-opacity duration-300 whitespace-nowrap';
+            label.innerHTML = `Savings: ${data.savings}%<br/>Investment: ${data.investment}%`;
+            
+            barWrapper.appendChild(investmentLine);
+            barWrapper.appendChild(savingsBar);
+            barWrapper.appendChild(label);
+
+            barWrapper.addEventListener('mouseenter', () => {
+                label.style.opacity = '1';
+                savingsBar.classList.add('shadow-xl', 'ring-2', 'ring-offset-2', 'ring-opacity-75', 'ring-teal-500');
+            });
+            barWrapper.addEventListener('mouseleave', () => {
+                label.style.opacity = '0';
+                savingsBar.classList.remove('shadow-xl', 'ring-2', 'ring-offset-2', 'ring-opacity-75', 'ring-teal-500');
+            });
+
+            chartContainer.appendChild(barWrapper);
+        });
+
+        // Attach observers
+        document.querySelectorAll('.fade-in-scroll, #results, #live-dashboard, #monitoring-dashboard').forEach(el => {
+            mainObserver.observe(el);
+        });
+        
+        // Final Init tasks
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('subtitle').classList.add('opacity-100', 'translate-y-0');
+            startSim(); // Start simulation by default as requested in the source file
+            log('Dashboard initialized. Live data simulation started.');
+        });
+
+        // Smooth Scroll Logic
+        document.getElementById('explore-button').addEventListener('click', function() {
+            document.getElementById('introduction').scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    </script>
+</body>
+</html>
